@@ -14,6 +14,7 @@ import {
   Switch,
   Typography,
   Divider,
+  Tabs,
 } from "antd";
 import {
   EditOutlined,
@@ -23,6 +24,8 @@ import {
   BellOutlined,
   CodeOutlined,
   LinkOutlined,
+  StarOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 import {
   getNotifications,
@@ -30,9 +33,13 @@ import {
   deleteNotification,
   editNotification,
   resetNotification,
+  favoriteNotification,
+  unfavoriteNotification,
+  resetAllNotifications,
 } from "./api";
 
 const { Title } = Typography;
+const { TabPane } = Tabs;
 
 interface Notification {
   id: string;
@@ -42,6 +49,7 @@ interface Notification {
   createdAt: string;
   htmlContent?: string;
   error?: string;
+  isFavorite: boolean;
 }
 
 function NotificationTable() {
@@ -50,6 +58,7 @@ function NotificationTable() {
   const [editingNotification, setEditingNotification] =
     useState<Notification | null>(null);
   const [showSentNotifications, setShowSentNotifications] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -88,6 +97,16 @@ function NotificationTable() {
     loadNotifications();
   };
 
+  const handleResetAll = async () => {
+    try {
+      await resetAllNotifications();
+      AntMessage.success("כל ההתראות אופסו בהצלחה");
+      loadNotifications();
+    } catch (error) {
+      AntMessage.error("שגיאה באיפוס ההתראות");
+    }
+  };
+
   const handleModalOk = async () => {
     const values = await form.validateFields();
     if (editingNotification) {
@@ -101,11 +120,49 @@ function NotificationTable() {
     loadNotifications();
   };
 
-  const filteredNotifications = notifications.filter(
-    (notification) => showSentNotifications || !notification.sent
-  );
+  const handleFavorite = async (id: string, isFavorite: boolean) => {
+    try {
+      if (isFavorite) {
+        await unfavoriteNotification(id);
+        AntMessage.success("התראה הוסרה מהמועדפים");
+      } else {
+        await favoriteNotification(id);
+        AntMessage.success("התראה נוספה למועדפים");
+      }
+      loadNotifications();
+    } catch (error) {
+      AntMessage.error("שגיאה בעדכון המועדפים");
+    }
+  };
+
+  const filteredNotifications = notifications.filter((notification) => {
+    if (activeTab === "favorites") {
+      return notification.isFavorite;
+    }
+    return showSentNotifications || !notification.sent;
+  });
 
   const columns = [
+    {
+      title: "מועדפים",
+      key: "favorite",
+      width: 80,
+      render: (_: any, record: Notification) => (
+        <Tooltip title={record.isFavorite ? "הסר ממועדפים" : "הוסף למועדפים"}>
+          <Button
+            type="text"
+            icon={
+              record.isFavorite ? (
+                <StarFilled style={{ color: "#ffd700" }} />
+              ) : (
+                <StarOutlined />
+              )
+            }
+            onClick={() => handleFavorite(record.id!, !record.isFavorite)}
+          />
+        </Tooltip>
+      ),
+    },
     {
       title: "סוג",
       dataIndex: "type",
@@ -278,6 +335,14 @@ function NotificationTable() {
           ניהול התראות
         </Title>
         <Space>
+          <Button
+            type="default"
+            icon={<ReloadOutlined />}
+            onClick={handleResetAll}
+            danger
+          >
+            איפוס כל ההתראות
+          </Button>
           <Switch
             checked={showSentNotifications}
             onChange={setShowSentNotifications}
@@ -290,18 +355,22 @@ function NotificationTable() {
         </Space>
       </div>
 
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane tab="כל ההתראות" key="all" />
+        <TabPane tab="מועדפים" key="favorites" />
+      </Tabs>
+
       <Table
         columns={columns}
         dataSource={filteredNotifications}
         rowKey="id"
         pagination={{ pageSize: 10 }}
-        style={{ width: "100%" }}
-        scroll={{ x: "max-content" }}
+        style={{ marginTop: 16 }}
       />
 
       <Modal
         title={editingNotification ? "עריכת התראה" : "הוספת התראה"}
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
         okText="שמור"
@@ -309,6 +378,14 @@ function NotificationTable() {
         width={600}
       >
         <Form form={form} layout="vertical">
+          <Form.Item
+            name="userId"
+            label="מזהה משתמש"
+            initialValue="97254"
+            rules={[{ required: true, message: "הכנס מזהה משתמש" }]}
+          >
+            <Input placeholder="הכנס מזהה משתמש" />
+          </Form.Item>
           <Form.Item
             name="type"
             label="סוג"

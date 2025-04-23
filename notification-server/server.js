@@ -8,6 +8,7 @@ const axios = require("axios");
 const app = express();
 const port = 3001;
 const notificationsFile = path.join(__dirname, "notifications.json");
+const favoritesFile = path.join(__dirname, "favorites.json");
 
 // Valid notification types
 const VALID_TYPES = ["INFO", "ERROR", "COINS", "FREE_HTML", "URL_HTML"];
@@ -24,6 +25,17 @@ function readNotifications() {
 
 function writeNotifications(data) {
   fs.writeFileSync(notificationsFile, JSON.stringify(data, null, 2));
+}
+
+function readFavorites() {
+  if (!fs.existsSync(favoritesFile)) {
+    fs.writeFileSync(favoritesFile, "[]");
+  }
+  return JSON.parse(fs.readFileSync(favoritesFile));
+}
+
+function writeFavorites(data) {
+  fs.writeFileSync(favoritesFile, JSON.stringify(data, null, 2));
 }
 
 // Validate URL
@@ -64,10 +76,17 @@ async function fetchHtmlContent(url) {
 app.get("/notifications", async (req, res) => {
   try {
     const notifications = readNotifications();
+    const favorites = readFavorites();
+
+    // Add isFavorite flag to notifications
+    const processedNotifications = notifications.map((notification) => ({
+      ...notification,
+      isFavorite: favorites.includes(notification.id),
+    }));
 
     // Fetch HTML content for URL_HTML type notifications
-    const processedNotifications = await Promise.all(
-      notifications.map(async (notification) => {
+    const finalNotifications = await Promise.all(
+      processedNotifications.map(async (notification) => {
         if (notification.type === "URL_HTML") {
           try {
             const htmlContent = await fetchHtmlContent(notification.message);
@@ -80,7 +99,7 @@ app.get("/notifications", async (req, res) => {
       })
     );
 
-    res.json(processedNotifications);
+    res.json(finalNotifications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -95,6 +114,7 @@ app.post("/notifications", (req, res) => {
       id: Date.now().toString(),
       type: req.body.type,
       message: req.body.message,
+      userId: req.body.userId || "97254", // Default userId if not provided
       sent: false,
       createdAt: new Date().toISOString(),
     };
@@ -143,8 +163,9 @@ app.post("/notifications/:id/edit", (req, res) => {
 // 🟢 ✅ בדיקת התראות חדשות
 app.get("/notifications/check", async (req, res) => {
   try {
+    const userId = req.query.userId || "97254"; // Default userId if not provided
     const queue = readNotifications();
-    const nextNotification = queue.find((n) => !n.sent);
+    const nextNotification = queue.find((n) => !n.sent && n.userId === userId);
 
     if (nextNotification) {
       nextNotification.sent = true;
@@ -182,6 +203,48 @@ app.get("/notifications/check", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// ✅ הוספת התראה למועדפים
+app.post("/notifications/:id/favorite", (req, res) => {
+  try {
+    const favorites = readFavorites();
+    const notificationId = req.params.id;
+
+    if (!favorites.includes(notificationId)) {
+      favorites.push(notificationId);
+      writeFavorites(favorites);
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ הסרת התראה מהמועדפים
+app.post("/notifications/:id/unfavorite", (req, res) => {
+  try {
+    const favorites = readFavorites();
+    const notificationId = req.params.id;
+
+    const updatedFavorites = favorites.filter((id) => id !== notificationId);
+    writeFavorites(updatedFavorites);
+
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ איפוס כל ההתראות
+app.post("/notifications/reset-all", (req, res) => {
+  const notifications = readNotifications();
+  notifications.forEach((notification) => {
+    notification.sent = false;
+  });
+  writeNotifications(notifications);
+  res.sendStatus(200);
 });
 
 app.listen(port, () =>

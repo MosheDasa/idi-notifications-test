@@ -11,10 +11,12 @@ export interface Notification {
   id?: string;
   type: NotificationType;
   message: string;
+  userId?: string;
   sent?: boolean;
   createdAt?: string;
   htmlContent?: string;
   error?: string;
+  isFavorite?: boolean;
 }
 
 const api = axios.create({
@@ -46,7 +48,10 @@ export const addNotification = async (
   notification: Omit<Notification, "id" | "sent" | "createdAt">
 ): Promise<Notification> => {
   try {
-    const { data } = await api.post("/notifications", notification);
+    const { data } = await api.post("/notifications", {
+      ...notification,
+      userId: notification.userId || "97254",
+    });
     return data;
   } catch (error) {
     handleApiError(error);
@@ -84,15 +89,46 @@ export const editNotification = async (
   }
 };
 
-export const checkNotifications = async (): Promise<{
+export const checkNotifications = async (
+  userId: string = "97254"
+): Promise<{
   hasNotification: boolean;
   notification?: Notification;
 }> => {
   try {
-    const { data } = await api.get("/notifications/check");
+    const { data } = await api.get("/notifications/check", {
+      params: { userId },
+    });
     return data;
   } catch (error) {
     handleApiError(error);
     return { hasNotification: false };
+  }
+};
+
+export const favoriteNotification = async (id: string): Promise<void> => {
+  try {
+    await api.post(`/notifications/${id}/favorite`);
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+export const unfavoriteNotification = async (id: string): Promise<void> => {
+  try {
+    await api.post(`/notifications/${id}/unfavorite`);
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+export const resetAllNotifications = async (): Promise<void> => {
+  try {
+    await api.post("/notifications/reset-all");
+  } catch (error) {
+    handleApiError(error);
+    throw error;
   }
 };
