@@ -15,6 +15,8 @@ import {
   Typography,
   Divider,
   Tabs,
+  InputNumber,
+  Radio,
 } from "antd";
 import {
   EditOutlined,
@@ -36,21 +38,15 @@ import {
   favoriteNotification,
   unfavoriteNotification,
   resetAllNotifications,
+  Notification as ApiNotification,
 } from "./api";
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
 
-interface Notification {
+type Notification = ApiNotification & {
   id: string;
-  type: "INFO" | "ERROR" | "COINS" | "FREE_HTML" | "URL_HTML";
-  message: string;
-  sent: boolean;
-  createdAt: string;
-  htmlContent?: string;
-  error?: string;
-  isFavorite: boolean;
-}
+};
 
 function NotificationTable() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -60,14 +56,24 @@ function NotificationTable() {
   const [showSentNotifications, setShowSentNotifications] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [form] = Form.useForm();
+  const [userId, setUserId] = useState("97254");
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [userId]);
 
   const loadNotifications = async () => {
-    const data = await getNotifications();
-    setNotifications(data as Notification[]);
+    try {
+      const data = await getNotifications(userId);
+      setNotifications(
+        data.map((notification) => ({
+          ...notification,
+          id: notification.id || Date.now().toString(),
+        }))
+      );
+    } catch (error) {
+      AntMessage.error("שגיאה בטעינת ההתראות");
+    }
   };
 
   const openAddModal = () => {
@@ -81,6 +87,9 @@ function NotificationTable() {
     form.setFieldsValue({
       type: notification.type,
       message: notification.message,
+      userId: notification.userId,
+      isPermanent: notification.isPermanent,
+      displayTime: notification.isPermanent ? 5000 : notification.displayTime,
     });
     setIsModalVisible(true);
   };
@@ -108,16 +117,26 @@ function NotificationTable() {
   };
 
   const handleModalOk = async () => {
-    const values = await form.validateFields();
-    if (editingNotification) {
-      await editNotification(editingNotification.id, values);
-      AntMessage.success("התראה עודכנה בהצלחה");
-    } else {
-      await addNotification(values);
-      AntMessage.success("התראה נוספה בהצלחה");
+    try {
+      const values = await form.validateFields();
+      const notificationData = {
+        ...values,
+        isPermanent: values.isPermanent || false,
+        displayTime: values.isPermanent ? null : values.displayTime || 5000,
+      };
+
+      if (editingNotification) {
+        await editNotification(editingNotification.id, notificationData);
+        AntMessage.success("התראה עודכנה בהצלחה");
+      } else {
+        await addNotification(notificationData);
+        AntMessage.success("התראה נוספה בהצלחה");
+      }
+      setIsModalVisible(false);
+      loadNotifications();
+    } catch (error) {
+      AntMessage.error("שגיאה בשמירת ההתראה");
     }
-    setIsModalVisible(false);
-    loadNotifications();
   };
 
   const handleFavorite = async (id: string, isFavorite: boolean) => {
@@ -335,6 +354,12 @@ function NotificationTable() {
           ניהול התראות
         </Title>
         <Space>
+          <Input
+            placeholder="מזהה משתמש"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            style={{ width: 150 }}
+          />
           <Button
             type="default"
             icon={<ReloadOutlined />}
@@ -377,7 +402,14 @@ function NotificationTable() {
         cancelText="בטל"
         width={600}
       >
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            isPermanent: false,
+            displayTime: 5000,
+          }}
+        >
           <Form.Item
             name="userId"
             label="מזהה משתמש"
@@ -401,11 +433,40 @@ function NotificationTable() {
               ]}
             />
           </Form.Item>
+          <Form.Item name="isPermanent" label="התראה קבועה">
+            <Radio.Group>
+              <Radio value={true}>כן</Radio>
+              <Radio value={false}>לא</Radio>
+            </Radio.Group>
+          </Form.Item>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.isPermanent !== currentValues.isPermanent
+            }
+          >
+            {({ getFieldValue }) =>
+              !getFieldValue("isPermanent") && (
+                <Form.Item
+                  name="displayTime"
+                  label="זמן תצוגה (מילישניות)"
+                  rules={[{ required: true, message: "הכנס זמן תצוגה" }]}
+                >
+                  <InputNumber
+                    min={1000}
+                    max={30000}
+                    step={1000}
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+              )
+            }
+          </Form.Item>
           <Form.Item
             name="message"
             label="תוכן ההתראה"
             rules={[
-              { required: true, message: "הכנס הודעה" },
+              { required: true, message: "הכנס תוכן" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue("type") !== "URL_HTML" || !value) {

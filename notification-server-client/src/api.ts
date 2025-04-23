@@ -12,6 +12,8 @@ export interface Notification {
   type: NotificationType;
   message: string;
   userId?: string;
+  isPermanent: boolean;
+  displayTime?: number;
   sent?: boolean;
   createdAt?: string;
   htmlContent?: string;
@@ -34,9 +36,13 @@ const handleApiError = (error: any) => {
   }
 };
 
-export const getNotifications = async (): Promise<Notification[]> => {
+export const getNotifications = async (
+  userId: string = "97254"
+): Promise<Notification[]> => {
   try {
-    const { data } = await api.get("/notifications");
+    const { data } = await api.get("/notifications", {
+      params: { userId },
+    });
     return data;
   } catch (error) {
     handleApiError(error);

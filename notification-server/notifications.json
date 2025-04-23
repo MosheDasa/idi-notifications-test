@@ -1,50 +1,52 @@
 [
   {
-    "id": "1745392237406",
+    "id": "1745405774235",
     "type": "INFO",
     "message": "הגיבוי האחרון הושלם בהצלחה בשעה 03:45.",
-    "sent": true,
     "userId": "97254",
-    "createdAt": "2025-04-23T07:10:37.407Z"
+    "isPermanent": true,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T10:56:14.235Z"
   },
   {
-    "id": "1745392242503",
+    "id": "1745405789431",
     "type": "ERROR",
     "message": "לא ניתן להתחבר לשרת הנתונים. נסה שוב מאוחר יותר או פנה לתמיכה.",
-    "sent": true,
     "userId": "97254",
-    "createdAt": "2025-04-23T07:10:42.503Z"
+    "isPermanent": true,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T10:56:29.431Z"
   },
   {
-    "id": "1745392270482",
-    "type": "FREE_HTML",
-    "message": "<div style=\"text-align:center;\">\n  <h3 style=\"margin:0; color:#4CAF50;\">🎉 ברוך הבא!</h3>\n  <p style=\"margin:5px 0;\">למד עוד על הפיצ'רים החדשים בגרסה 2.0!</p>\n  <a href=\"https://your-link-here.com\" style=\"color:#2196F3; text-decoration:none; font-weight:bold;\">לחץ כאן לפרטים נוספים</a>\n</div>",
-    "sent": true,
-    "userId": "97254",
-    "createdAt": "2025-04-23T07:11:10.482Z"
-  },
-  {
-    "id": "1745392340881",
-    "type": "URL_HTML",
-    "message": "http://localhost:3000/indexText.html",
-    "sent": true,
-    "userId": "97254",
-    "createdAt": "2025-04-23T07:12:20.881Z"
-  },
-  {
-    "id": "1745392370865",
+    "id": "1745405814826",
     "type": "COINS",
     "message": "משה דסה כל הכבוד",
-    "sent": true,
     "userId": "97254",
-    "createdAt": "2025-04-23T07:12:50.865Z"
+    "isPermanent": false,
+    "displayTime": 30000,
+    "sent": true,
+    "createdAt": "2025-04-23T10:56:54.826Z"
   },
   {
-    "id": "1745395943953",
-    "type": "INFO",
-    "message": "97254",
+    "id": "1745405826331",
+    "type": "URL_HTML",
+    "message": "http://localhost:3000/indexText.html",
     "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 1000,
     "sent": true,
-    "createdAt": "2025-04-23T08:12:23.953Z"
+    "createdAt": "2025-04-23T10:57:06.331Z"
+  },
+  {
+    "id": "1745405853582",
+    "type": "FREE_HTML",
+    "message": "<div style=\"text-align:center;\">\n  <h3 style=\"margin:0; color:#4CAF50;\">🎉 ברוך הבא!</h3>\n  <p style=\"margin:5px 0;\">למד עוד על הפיצ'רים החדשים בגרסה 2.0!</p>\n  <a href=\"https://your-link-here.com\" style=\"color:#2196F3; text-decoration:none; font-weight:bold;\">לחץ כאן לפרטים נוספים</a>\n</div>",
+    "userId": "97254",
+    "isPermanent": true,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T10:57:33.582Z"
   }
 ]

@@ -77,12 +77,15 @@ app.get("/notifications", async (req, res) => {
   try {
     const notifications = readNotifications();
     const favorites = readFavorites();
+    const userId = req.query.userId || "97254";
 
     // Add isFavorite flag to notifications
-    const processedNotifications = notifications.map((notification) => ({
-      ...notification,
-      isFavorite: favorites.includes(notification.id),
-    }));
+    const processedNotifications = notifications
+      .filter((notification) => notification.userId === userId)
+      .map((notification) => ({
+        ...notification,
+        isFavorite: favorites.includes(notification.id),
+      }));
 
     // Fetch HTML content for URL_HTML type notifications
     const finalNotifications = await Promise.all(
@@ -114,7 +117,9 @@ app.post("/notifications", (req, res) => {
       id: Date.now().toString(),
       type: req.body.type,
       message: req.body.message,
-      userId: req.body.userId || "97254", // Default userId if not provided
+      userId: req.body.userId || "97254",
+      isPermanent: req.body.isPermanent || false,
+      displayTime: req.body.displayTime || 5000, // Default 5 seconds
       sent: false,
       createdAt: new Date().toISOString(),
     };
@@ -152,6 +157,8 @@ app.post("/notifications/:id/edit", (req, res) => {
     if (notification) {
       notification.type = req.body.type;
       notification.message = req.body.message;
+      notification.isPermanent = req.body.isPermanent;
+      notification.displayTime = req.body.displayTime;
     }
     writeNotifications(notifications);
     res.sendStatus(200);
@@ -210,6 +217,12 @@ app.post("/notifications/:id/favorite", (req, res) => {
   try {
     const favorites = readFavorites();
     const notificationId = req.params.id;
+    const notifications = readNotifications();
+    const notification = notifications.find((n) => n.id === notificationId);
+
+    if (!notification) {
+      return res.status(404).json({ error: "התראה לא נמצאה" });
+    }
 
     if (!favorites.includes(notificationId)) {
       favorites.push(notificationId);
@@ -227,6 +240,12 @@ app.post("/notifications/:id/unfavorite", (req, res) => {
   try {
     const favorites = readFavorites();
     const notificationId = req.params.id;
+    const notifications = readNotifications();
+    const notification = notifications.find((n) => n.id === notificationId);
+
+    if (!notification) {
+      return res.status(404).json({ error: "התראה לא נמצאה" });
+    }
 
     const updatedFavorites = favorites.filter((id) => id !== notificationId);
     writeFavorites(updatedFavorites);
