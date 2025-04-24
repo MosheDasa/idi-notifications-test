@@ -17,6 +17,8 @@ import {
   Tabs,
   InputNumber,
   Radio,
+  Badge,
+  Alert,
 } from "antd";
 import {
   EditOutlined,
@@ -28,6 +30,7 @@ import {
   LinkOutlined,
   StarOutlined,
   StarFilled,
+  WifiOutlined,
 } from "@ant-design/icons";
 import {
   getNotifications,
@@ -38,6 +41,8 @@ import {
   favoriteNotification,
   unfavoriteNotification,
   resetAllNotifications,
+  connectWebSocket,
+  disconnectWebSocket,
   Notification as ApiNotification,
 } from "./api";
 
@@ -57,9 +62,18 @@ function NotificationTable() {
   const [activeTab, setActiveTab] = useState("all");
   const [form] = Form.useForm();
   const [userId, setUserId] = useState("97254");
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionAlert, setConnectionAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     loadNotifications();
+    connectWebSocket(userId, handleNewNotification, handleConnectionStatus);
+    return () => {
+      disconnectWebSocket();
+    };
   }, [userId]);
 
   const loadNotifications = async () => {
@@ -73,6 +87,36 @@ function NotificationTable() {
       );
     } catch (error) {
       AntMessage.error("שגיאה בטעינת ההתראות");
+    }
+  };
+
+  const handleNewNotification = (notification: Notification) => {
+    setNotifications((prevNotifications) => {
+      const existingIndex = prevNotifications.findIndex(
+        (n) => n.id === notification.id
+      );
+      if (existingIndex >= 0) {
+        const newNotifications = [...prevNotifications];
+        newNotifications[existingIndex] = notification;
+        return newNotifications;
+      }
+      return [notification, ...prevNotifications];
+    });
+  };
+
+  const handleConnectionStatus = (connected: boolean) => {
+    setIsConnected(connected);
+    if (connected) {
+      setConnectionAlert({
+        type: "success",
+        message: "החיבור לשרת שוחזר בהצלחה",
+      });
+      setTimeout(() => setConnectionAlert(null), 3000);
+    } else {
+      setConnectionAlert({
+        type: "error",
+        message: "החיבור לשרת נותק. מנסה להתחבר מחדש...",
+      });
     }
   };
 
@@ -95,15 +139,53 @@ function NotificationTable() {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteNotification(id);
-    AntMessage.success("התראה נמחקה בהצלחה");
-    loadNotifications();
+    try {
+      await deleteNotification(id);
+      AntMessage.success("התראה נמחקה בהצלחה");
+      loadNotifications();
+    } catch (error: any) {
+      let errorMessage = "שגיאה במחיקת ההתראה";
+
+      if (error.response) {
+        const serverError = error.response.data?.error;
+        if (serverError) {
+          errorMessage = serverError;
+        } else if (error.response.status === 404) {
+          errorMessage = "ההתראה לא נמצאה";
+        }
+      }
+
+      AntMessage.error({
+        content: errorMessage,
+        duration: 5,
+        style: { marginTop: "50vh" },
+      });
+    }
   };
 
   const handleReset = async (id: string) => {
-    await resetNotification(id);
-    AntMessage.success("סטטוס ההתראה אופס בהצלחה");
-    loadNotifications();
+    try {
+      await resetNotification(id);
+      AntMessage.success("התראה נשלחה מחדש בהצלחה");
+      loadNotifications();
+    } catch (error: any) {
+      let errorMessage = "שגיאה בשליחה מחדש";
+
+      if (error.response) {
+        const serverError = error.response.data?.error;
+        if (serverError) {
+          errorMessage = serverError;
+        } else if (error.response.status === 404) {
+          errorMessage = "ההתראה לא נמצאה";
+        }
+      }
+
+      AntMessage.error({
+        content: errorMessage,
+        duration: 5,
+        style: { marginTop: "50vh" },
+      });
+    }
   };
 
   const handleResetAll = async () => {
@@ -127,15 +209,38 @@ function NotificationTable() {
 
       if (editingNotification) {
         await editNotification(editingNotification.id, notificationData);
-        AntMessage.success("התראה עודכנה בהצלחה");
+        AntMessage.success("התראה עודכנה ונשלחה מחדש בהצלחה");
       } else {
         await addNotification(notificationData);
-        AntMessage.success("התראה נוספה בהצלחה");
+        AntMessage.success("התראה נוספה ונשלחה בהצלחה");
       }
       setIsModalVisible(false);
       loadNotifications();
-    } catch (error) {
-      AntMessage.error("שגיאה בשמירת ההתראה");
+    } catch (error: any) {
+      let errorMessage = "שגיאה בשמירת ההתראה";
+
+      if (error.response) {
+        const serverError = error.response.data?.error;
+        if (serverError) {
+          errorMessage = serverError;
+        } else if (error.response.status === 400) {
+          errorMessage = "הנתונים שהוזנו אינם תקינים";
+        } else if (error.response.status === 404) {
+          errorMessage = "ההתראה לא נמצאה";
+        } else if (error.response.status === 500) {
+          errorMessage = "שגיאת שרת פנימית";
+        }
+      } else if (error.request) {
+        errorMessage = "לא ניתן להתחבר לשרת. אנא בדוק את החיבור שלך";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      AntMessage.error({
+        content: errorMessage,
+        duration: 5,
+        style: { marginTop: "50vh" },
+      });
     }
   };
 
@@ -149,8 +254,23 @@ function NotificationTable() {
         AntMessage.success("התראה נוספה למועדפים");
       }
       loadNotifications();
-    } catch (error) {
-      AntMessage.error("שגיאה בעדכון המועדפים");
+    } catch (error: any) {
+      let errorMessage = "שגיאה בעדכון המועדפים";
+
+      if (error.response) {
+        const serverError = error.response.data?.error;
+        if (serverError) {
+          errorMessage = serverError;
+        } else if (error.response.status === 404) {
+          errorMessage = "ההתראה לא נמצאה";
+        }
+      }
+
+      AntMessage.error({
+        content: errorMessage,
+        duration: 5,
+        style: { marginTop: "50vh" },
+      });
     }
   };
 
@@ -332,6 +452,17 @@ function NotificationTable() {
     }
   };
 
+  const items = [
+    {
+      key: "all",
+      label: "כל ההתראות",
+    },
+    {
+      key: "favorites",
+      label: "מועדפים",
+    },
+  ];
+
   return (
     <Card
       style={{
@@ -339,7 +470,9 @@ function NotificationTable() {
         margin: "auto",
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
-      bodyStyle={{ padding: "24px" }}
+      styles={{
+        body: { padding: "24px" },
+      }}
     >
       <div
         style={{
@@ -352,6 +485,20 @@ function NotificationTable() {
         <Title level={4} style={{ margin: 0 }}>
           <BellOutlined style={{ marginLeft: 8 }} />
           ניהול התראות
+          <Badge
+            status={isConnected ? "success" : "error"}
+            style={{ marginLeft: 8 }}
+            text={
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: isConnected ? "#52c41a" : "#ff4d4f",
+                }}
+              >
+                {isConnected ? "מחובר" : "מנותק"}
+              </span>
+            }
+          />
         </Title>
         <Space>
           <Input
@@ -380,10 +527,18 @@ function NotificationTable() {
         </Space>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab="כל ההתראות" key="all" />
-        <TabPane tab="מועדפים" key="favorites" />
-      </Tabs>
+      {connectionAlert && (
+        <Alert
+          type={connectionAlert.type}
+          message={connectionAlert.message}
+          showIcon
+          closable
+          onClose={() => setConnectionAlert(null)}
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
 
       <Table
         columns={columns}

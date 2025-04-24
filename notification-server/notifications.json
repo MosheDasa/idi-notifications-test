@@ -6,7 +6,7 @@
     "userId": "97254",
     "isPermanent": true,
     "displayTime": 5000,
-    "sent": true,
+    "sent": false,
     "createdAt": "2025-04-23T10:56:14.235Z"
   },
   {
@@ -16,7 +16,7 @@
     "userId": "97254",
     "isPermanent": true,
     "displayTime": 5000,
-    "sent": true,
+    "sent": false,
     "createdAt": "2025-04-23T10:56:29.431Z"
   },
   {
@@ -26,7 +26,7 @@
     "userId": "97254",
     "isPermanent": false,
     "displayTime": 30000,
-    "sent": true,
+    "sent": false,
     "createdAt": "2025-04-23T10:56:54.826Z"
   },
   {
@@ -35,8 +35,8 @@
     "message": "http://localhost:3000/indexText.html",
     "userId": "97254",
     "isPermanent": false,
-    "displayTime": 1000,
-    "sent": true,
+    "displayTime": 5000,
+    "sent": false,
     "createdAt": "2025-04-23T10:57:06.331Z"
   },
   {
@@ -48,5 +48,215 @@
     "displayTime": 5000,
     "sent": true,
     "createdAt": "2025-04-23T10:57:33.582Z"
+  },
+  {
+    "id": "1745409321477",
+    "type": "INFO",
+    "message": "שדגשד",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T11:55:21.477Z"
+  },
+  {
+    "id": "1745415526787",
+    "type": "INFO",
+    "message": "sdasdasd",
+    "userId": "97254",
+    "isPermanent": true,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T13:38:46.788Z"
+  },
+  {
+    "id": "1745416261046",
+    "type": "INFO",
+    "message": "שדגשדג",
+    "userId": "97254",
+    "isPermanent": true,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T13:51:01.047Z"
+  },
+  {
+    "id": "1745416818617",
+    "type": "INFO",
+    "message": "97254",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": true,
+    "createdAt": "2025-04-23T14:00:18.617Z"
+  },
+  {
+    "id": "1745479235888",
+    "type": "INFO",
+    "message": "דגדשג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T07:20:35.888Z"
+  },
+  {
+    "id": "1745479290253",
+    "type": "INFO",
+    "message": "דגדגדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T07:21:30.253Z"
+  },
+  {
+    "id": "1745481809229",
+    "type": "INFO",
+    "message": "דגכדגכ",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:03:29.229Z"
+  },
+  {
+    "id": "1745482074488",
+    "type": "INFO",
+    "message": "סבזסב",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:07:54.488Z"
+  },
+  {
+    "id": "1745482388583",
+    "type": "INFO",
+    "message": "sdasd",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:13:08.583Z"
+  },
+  {
+    "id": "1745482507027",
+    "type": "INFO",
+    "message": "גזדגשד",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:15:07.027Z"
+  },
+  {
+    "id": "1745482623211",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:17:03.211Z"
+  },
+  {
+    "id": "1745482634815",
+    "type": "ERROR",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:17:14.815Z"
+  },
+  {
+    "id": "1745482730594",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": true,
+    "displayTime": null,
+    "sent": false,
+    "createdAt": "2025-04-24T08:18:50.594Z"
+  },
+  {
+    "id": "1745482742101",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:19:02.101Z"
+  },
+  {
+    "id": "1745482785823",
+    "type": "INFO",
+    "message": "שדגשדגדשג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:19:45.823Z"
+  },
+  {
+    "id": "1745482811731",
+    "type": "INFO",
+    "message": "דגדשגדגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:20:11.731Z"
+  },
+  {
+    "id": "1745482913744",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:21:53.744Z"
+  },
+  {
+    "id": "1745482922646",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:22:02.646Z"
+  },
+  {
+    "id": "1745483155553",
+    "type": "INFO",
+    "message": "דגשדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:25:55.553Z"
+  },
+  {
+    "id": "1745483344792",
+    "type": "COINS",
+    "message": "כעסעדג",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:29:04.792Z"
+  },
+  {
+    "id": "1745484734711",
+    "type": "INFO",
+    "message": "שדגשד",
+    "userId": "97254",
+    "isPermanent": false,
+    "displayTime": 5000,
+    "sent": false,
+    "createdAt": "2025-04-24T08:52:14.711Z"
   }
 ]

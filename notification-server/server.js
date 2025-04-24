@@ -4,17 +4,56 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const WebSocket = require("ws");
+const http = require("http");
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 const port = 3001;
 const notificationsFile = path.join(__dirname, "notifications.json");
 const favoritesFile = path.join(__dirname, "favorites.json");
 
+// Configure CORS
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.use(bodyParser.json());
+
 // Valid notification types
 const VALID_TYPES = ["INFO", "ERROR", "COINS", "FREE_HTML", "URL_HTML"];
 
-app.use(cors());
-app.use(bodyParser.json());
+// Store connected clients
+const clients = new Map();
+
+wss.on("connection", (ws, req) => {
+  const userId = new URLSearchParams(req.url.split("?")[1]).get("userId");
+  if (!userId) {
+    ws.close();
+    return;
+  }
+
+  // Store the client with its userId
+  clients.set(userId, ws);
+
+  ws.on("close", () => {
+    clients.delete(userId);
+  });
+});
+
+// Function to send notification to specific user
+const sendNotificationToUser = (userId, notification) => {
+  const client = clients.get(userId);
+  if (client && client.readyState === WebSocket.OPEN) {
+    client.send(JSON.stringify(notification));
+  }
+};
 
 function readNotifications() {
   if (!fs.existsSync(notificationsFile)) {
@@ -110,25 +149,26 @@ app.get("/notifications", async (req, res) => {
 
 // ✅ הוספת התראה חדשה
 app.post("/notifications", (req, res) => {
-  try {
-    validateNotification(req.body);
-    const notifications = readNotifications();
-    const newNotification = {
-      id: Date.now().toString(),
-      type: req.body.type,
-      message: req.body.message,
-      userId: req.body.userId || "97254",
-      isPermanent: req.body.isPermanent || false,
-      displayTime: req.body.displayTime || 5000, // Default 5 seconds
-      sent: false,
-      createdAt: new Date().toISOString(),
-    };
-    notifications.push(newNotification);
-    writeNotifications(notifications);
-    res.json(newNotification);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+  const { type, message, userId, isPermanent, displayTime } = req.body;
+  const notification = {
+    id: Date.now().toString(),
+    type,
+    message,
+    userId,
+    isPermanent: isPermanent || false,
+    displayTime: isPermanent ? null : displayTime || 5000,
+    sent: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  const notifications = readNotifications();
+  notifications.push(notification);
+  writeNotifications(notifications);
+
+  // Send notification via WebSocket
+  sendNotificationToUser(userId, notification);
+
+  res.json(notification);
 });
 
 // ✅ מחיקת התראה
@@ -141,27 +181,55 @@ app.post("/notifications/:id/delete", (req, res) => {
 
 // ✅ איפוס סטטוס 'נשלח'
 app.post("/notifications/:id/reset", (req, res) => {
-  const notifications = readNotifications();
-  const notification = notifications.find((n) => n.id === req.params.id);
-  if (notification) notification.sent = false;
-  writeNotifications(notifications);
-  res.sendStatus(200);
+  try {
+    const notifications = readNotifications();
+    const notification = notifications.find((n) => n.id === req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({ error: "התראה לא נמצאה" });
+    }
+
+    // איפוס סטטוס הנשלח
+    notification.sent = false;
+    writeNotifications(notifications);
+
+    // Send notification via WebSocket
+    sendNotificationToUser(notification.userId, notification);
+
+    res.json({ success: true, message: "התראה נשלחה מחדש" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ✅ עריכת התראה קיימת
 app.post("/notifications/:id/edit", (req, res) => {
   try {
     validateNotification(req.body);
+
     const notifications = readNotifications();
-    const notification = notifications.find((n) => n.id === req.params.id);
-    if (notification) {
-      notification.type = req.body.type;
-      notification.message = req.body.message;
-      notification.isPermanent = req.body.isPermanent;
-      notification.displayTime = req.body.displayTime;
+    const notificationIndex = notifications.findIndex(
+      (n) => n.id === req.params.id
+    );
+
+    if (notificationIndex === -1) {
+      return res.status(404).json({ error: "התראה לא נמצאה" });
     }
+
+    // עדכון ההתראה
+    const updatedNotification = {
+      ...notifications[notificationIndex],
+      ...req.body,
+      sent: false, // איפוס סטטוס הנשלח כדי לשלוח מחדש
+    };
+
+    notifications[notificationIndex] = updatedNotification;
     writeNotifications(notifications);
-    res.sendStatus(200);
+
+    // Send notification via WebSocket
+    sendNotificationToUser(updatedNotification.userId, updatedNotification);
+
+    res.json({ success: true, message: "התראה עודכנה ונשלחה מחדש" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -266,6 +334,7 @@ app.post("/notifications/reset-all", (req, res) => {
   res.sendStatus(200);
 });
 
-app.listen(port, () =>
-  console.log(`🚀 Notification server running at http://localhost:${port}`)
-);
+// Start the server
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
