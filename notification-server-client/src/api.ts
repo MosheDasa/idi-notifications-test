@@ -23,6 +23,7 @@ export interface Notification {
   isFavorite?: boolean;
   htmlContent?: string;
   error?: string;
+  amount?: number;
 }
 
 export type NotificationCallback = (notification: Notification) => void;

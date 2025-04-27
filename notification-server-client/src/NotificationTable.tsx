@@ -134,6 +134,7 @@ function NotificationTable() {
       userId: notification.userId,
       isPermanent: notification.isPermanent,
       displayTime: notification.isPermanent ? 5000 : notification.displayTime,
+      amount: notification.amount,
     });
     setIsModalVisible(true);
   };
@@ -205,6 +206,7 @@ function NotificationTable() {
         ...values,
         isPermanent: values.isPermanent || false,
         displayTime: values.isPermanent ? null : values.displayTime || 5000,
+        amount: values.type === "COINS" ? values.amount : undefined,
       };
 
       if (editingNotification) {
@@ -368,6 +370,24 @@ function NotificationTable() {
                 </div>
               ) : (
                 <div style={{ color: "#666" }}>טוען תוכן...</div>
+              )}
+            </div>
+          );
+        }
+        if (record.type === "COINS") {
+          return (
+            <div style={{ fontSize: "16px", lineHeight: "1.5" }}>
+              <div>{text}</div>
+              {record.amount !== undefined && (
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    color: "#002e6d",
+                    marginTop: "8px",
+                  }}
+                >
+                  סכום: ₪{record.amount.toLocaleString()}
+                </div>
               )}
             </div>
           );
@@ -587,6 +607,29 @@ function NotificationTable() {
                 { value: "URL_HTML", label: "HTML מ-URL" },
               ]}
             />
+          </Form.Item>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.type !== currentValues.type
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("type") === "COINS" ? (
+                <Form.Item
+                  name="amount"
+                  label="סכום"
+                  rules={[{ required: true, message: "הכנס סכום" }]}
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="הכנס סכום"
+                    min={0}
+                    step={1}
+                  />
+                </Form.Item>
+              ) : null
+            }
           </Form.Item>
           <Form.Item name="isPermanent" label="התראה קבועה">
             <Radio.Group>
